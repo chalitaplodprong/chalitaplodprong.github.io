@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบควบคุมและประกันคุณภาพ (Quality Control)</title>
+    <title>ระบบตรวจสอบและรายงานสิ่งปนเปื้อนในน้ำตาล</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap');
 
@@ -179,6 +179,26 @@
             margin-top: 0;
             padding: 8px 15px;
         }
+        
+        .back-btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-arrow-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            font-size: 2rem;
+            color: #6c757d;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .back-arrow-btn:hover {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
 
         .table-container {
             margin-top: 30px;
@@ -276,21 +296,20 @@
         .report-mode .dashboard-container,
         .report-mode .chart-container,
         .report-mode .action-button,
-        .report-mode .select-checkbox {
+        .report-mode .select-checkbox,
+        .report-mode .report-header .generate-btn,
+        .report-mode #openSeasonConfigBtn,
+        .report-mode #seasonSelectContainer,
+        .report-mode .report-header .export-btn-container {
             display: none !important;
         }
         
-        .report-mode .report-header .print-btn,
-        .report-mode .report-header .back-btn {
-            display: block;
-        }
-        
-        .report-mode .report-header .generate-btn {
+        .report-mode .report-header .back-btn-container {
             display: none;
         }
-
-        .report-mode #openSeasonConfigBtn {
-            display: none; /* Hide the button in report mode */
+        
+        .report-mode .back-btn-container {
+            display: block !important;
         }
 
         /* Hide the "เลือก" and "ID" columns and its content in report mode */
@@ -314,7 +333,7 @@
                 padding: 0;
             }
 
-            .form-section, .dashboard-container, .chart-container, .report-header, .action-button, .message, .select-checkbox, #openSeasonConfigBtn {
+            .form-section, .dashboard-container, .chart-container, .report-header, .action-button, .message, .select-checkbox, #openSeasonConfigBtn, #exportMainBtn, #exportModal, .back-btn-container, #seasonSelectContainer, .export-btn-container {
                 display: none !important;
             }
             
@@ -369,31 +388,28 @@
             background-color: rgba(0,0,0,0.4);
             padding-top: 60px;
         }
-
         .modal-content {
             background-color: #fefefe;
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
+            max-width: 500px;
             border-radius: 8px;
             position: relative;
         }
-
         .close-btn {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
-
         .close-btn:hover,
         .close-btn:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
-
         #seasonConfigTable th, #seasonConfigTable td {
             white-space: normal;
         }
@@ -401,7 +417,6 @@
             width: auto;
             padding: 5px 10px;
         }
-
         .season-form-group {
             margin-bottom: 15px;
         }
@@ -411,14 +426,34 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .modal-body label {
+            font-weight: bold;
+        }
+        .modal-body input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container" id="mainContainer">
-        <h1>ระบบควบคุมและประกันคุณภาพ</h1>
+        <h1>ระบบตรวจสอบและรายงานสิ่งปนเปื้อนในน้ำตาล</h1>
 
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div id="seasonSelectContainer" style="text-align: center; margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; align-items: center;">
             <label for="seasonSelect">เลือกฤดูหีบ:</label>
             <select id="seasonSelect" onchange="switchSeason()"></select>
             <button id="openSeasonConfigBtn" style="width: auto;">ตั้งค่าฤดูหีบ</button>
@@ -520,8 +555,10 @@
         <div class="report-section">
             <div class="report-header">
                 <h2>รายการตรวจสอบ QC</h2>
-                <button id="generateReportBtn" class="generate-btn">สร้างรายงาน</button>
-                <button id="backToMainBtn" class="back-btn" style="display: none;">กลับหน้าหลัก</button>
+                <div>
+                    <button id="generateReportBtn" class="generate-btn">สร้างรายงาน</button>
+                    <button id="exportMainBtn" style="width: auto;">Export เป็น Excel</button>
+                </div>
             </div>
             <div class="table-container">
                 <table id="qcTable">
@@ -541,6 +578,9 @@
                     <tbody>
                         </tbody>
                 </table>
+            </div>
+            <div class="back-btn-container" style="display: none;">
+                <button id="backToMainBtn" class="back-arrow-btn">←</button>
             </div>
         </div>
     </div>
@@ -587,11 +627,35 @@
                         </tbody>
                 </table>
             </div>
+            <hr>
+            <button id="clearAllDataBtn" class="delete-btn">ล้างข้อมูลทั้งหมด</button>
+        </div>
+    </div>
+
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeExportModalBtn">&times;</span>
+            <h2>Export ข้อมูลเป็น Excel</h2>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="exportStartDate">เลือกวันที่เริ่มต้น:</label>
+                    <input type="date" id="exportStartDate">
+                </div>
+                <div class="form-group">
+                    <label for="exportEndDate">เลือกวันที่สิ้นสุด:</label>
+                    <input type="date" id="exportEndDate">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmExportBtn">Export</button>
+                <button class="cancel-btn" id="cancelExportBtn">ยกเลิก</button>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -610,7 +674,9 @@
             const submitBtn = document.getElementById('submitBtn');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
             const recordIdInput = document.getElementById('recordId');
-            
+            const clearAllDataBtn = document.getElementById('clearAllDataBtn');
+            const exportMainBtn = document.getElementById('exportMainBtn');
+
             // Season Config elements
             const seasonConfigModal = document.getElementById('seasonConfigModal');
             const openSeasonConfigBtn = document.getElementById('openSeasonConfigBtn');
@@ -623,6 +689,15 @@
             const seasonIdInput = document.getElementById('seasonId');
             const saveSeasonBtn = document.getElementById('saveSeasonBtn');
             const cancelSeasonEditBtn = document.getElementById('cancelSeasonEditBtn');
+
+            // Export Modal elements
+            const exportModal = document.getElementById('exportModal');
+            const closeExportModalBtn = document.getElementById('closeExportModalBtn');
+            const confirmExportBtn = document.getElementById('confirmExportBtn');
+            const cancelExportBtn = document.getElementById('cancelExportBtn');
+            const exportStartDateInput = document.getElementById('exportStartDate');
+            const exportEndDateInput = document.getElementById('exportEndDate');
+            const seasonSelectContainer = document.getElementById('seasonSelectContainer');
 
 
             let records = [];
@@ -679,6 +754,8 @@
                     seasonConfigModal.style.display = 'none';
                     seasonConfigForm.reset();
                     resetSeasonFormState();
+                } else if (event.target == exportModal) {
+                    exportModal.style.display = 'none';
                 }
             }
 
@@ -699,6 +776,14 @@
                 seasonConfigForm.reset();
                 resetSeasonFormState();
             });
+
+            clearAllDataBtn.addEventListener('click', () => {
+                if(confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลทั้งหมด? ข้อมูลทั้งหมดที่บันทึกไว้ใน Local Storage จะถูกลบอย่างถาวร!')) {
+                    localStorage.clear();
+                    location.reload(); // Reload the page to reset the UI
+                }
+            });
+
 
             function loadSeasons() {
                 const storedSeasons = localStorage.getItem('seasons');
@@ -1054,15 +1139,35 @@
                                 position: 'top',
                             },
                             tooltip: {
-                                mode: 'index',
-                                intersect: false,
+                                callbacks: {
+                                    title: (tooltipItems) => {
+                                        const date = new Date(tooltipItems[0].raw.x);
+                                        return date.toLocaleDateString('th-TH', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        });
+                                    },
+                                    label: (tooltipItem) => {
+                                        const record = sortedRecords.find(rec => rec.timestamp === tooltipItem.raw.x.getTime());
+                                        if (record) {
+                                            const time = new Date(record.timestamp).toLocaleTimeString('th-TH', {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: false
+                                            });
+                                            return `เวลา: ${time} น. (${tooltipItem.dataset.label}: ${tooltipItem.raw.y} ชิ้น)`;
+                                        }
+                                        return `${tooltipItem.dataset.label}: ${tooltipItem.raw.y} ชิ้น`;
+                                    }
+                                }
                             }
                         },
                         scales: {
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: 'hour',
+                                    unit: 'day',
                                     tooltipFormat: 'dd MMM yyyy, HH:mm',
                                     displayFormats: {
                                         hour: 'HH:mm',
@@ -1089,6 +1194,87 @@
                 chartInstance = new Chart(qcChartCanvas, config);
             }
 
+            // New function to export selected data to Excel (now uses a date range)
+            function exportDataToExcel(startDate, endDate) {
+                const startTimestamp = new Date(startDate).getTime();
+                const endTimestamp = new Date(endDate).getTime();
+
+                const filteredRecords = records.filter(rec => {
+                    const recordDate = new Date(rec.timestamp);
+                    // Filter records within the selected date range (inclusive)
+                    return recordDate.getTime() >= startTimestamp && recordDate.getTime() <= endTimestamp + 86400000;
+                });
+                
+                if (filteredRecords.length === 0) {
+                    alert('ไม่พบข้อมูลในช่วงวันที่ที่เลือก');
+                    return;
+                }
+
+                const exportData = [
+                    ['วันที่/เวลา', 'ชนิดน้ำตาล', 'Lot Number', 'ผู้ตรวจสอบ', 'ผล', 'นน.ตัวอย่าง (กก.)', 'เม็ดเหลือง (ชิ้น)', 'เม็ดแดง (ชิ้น)', 'เม็ดเทา (ชิ้น)', 'เม็ดดำ (ชิ้น)', 'สนิม (ชิ้น)', 'รวมจำนวนสิ่งปนเปื้อน']
+                ];
+
+                filteredRecords.forEach(rec => {
+                    const date = new Date(rec.timestamp);
+                    const formattedDateTime = date.toLocaleDateString('th-TH') + ' ' + date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' น.';
+                    exportData.push([
+                        formattedDateTime,
+                        rec.sugarType,
+                        rec.lotNumber,
+                        rec.inspectorName,
+                        rec.result === 'Pass' ? 'ผ่าน' : 'ไม่ผ่าน',
+                        rec.contaminants.sampleWeight,
+                        rec.contaminants.yellow,
+                        rec.contaminants.red,
+                        rec.contaminants.grey,
+                        rec.contaminants.black,
+                        rec.contaminants.rust,
+                        rec.contaminants.total
+                    ]);
+                });
+
+                const newWorksheet = XLSX.utils.aoa_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, newWorksheet, 'รายการตรวจสอบ QC');
+
+                const exportFilename = `รายงานการตรวจสอบ-QC_${startDate}_ถึง_${endDate}.xlsx`;
+                XLSX.writeFile(workbook, exportFilename);
+                showMessage('Export ไฟล์ Excel สำเร็จ!');
+            }
+
+            // Event listener for main Export button
+            exportMainBtn.addEventListener('click', () => {
+                exportModal.style.display = 'block';
+            });
+
+            // Event listener for closing the export modal
+            closeExportModalBtn.addEventListener('click', () => {
+                exportModal.style.display = 'none';
+            });
+            cancelExportBtn.addEventListener('click', () => {
+                exportModal.style.display = 'none';
+            });
+            
+            // Event listener for confirming export in the modal
+            confirmExportBtn.addEventListener('click', () => {
+                const startDate = exportStartDateInput.value;
+                const endDate = exportEndDateInput.value;
+
+                if (!startDate || !endDate) {
+                    alert('กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด');
+                    return;
+                }
+                
+                if (new Date(startDate) > new Date(endDate)) {
+                    alert('วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด');
+                    return;
+                }
+
+                exportDataToExcel(startDate, endDate);
+                exportModal.style.display = 'none';
+            });
+
+
             generateReportBtn.addEventListener('click', () => {
                 const selectedCheckboxes = document.querySelectorAll('.select-checkbox:checked');
                 if (selectedCheckboxes.length === 0) {
@@ -1104,9 +1290,7 @@
                 });
                 
                 mainContainer.classList.add('report-mode');
-                backToMainBtn.style.display = 'block';
-                generateReportBtn.style.display = 'none';
-                openSeasonConfigBtn.style.display = 'none';
+                backToMainBtn.parentElement.style.display = 'block';
             });
 
             backToMainBtn.addEventListener('click', () => {
@@ -1115,9 +1299,7 @@
                     row.style.display = 'table-row';
                 });
                 mainContainer.classList.remove('report-mode');
-                backToMainBtn.style.display = 'none';
-                generateReportBtn.style.display = 'block';
-                openSeasonConfigBtn.style.display = 'inline-block';
+                backToMainBtn.parentElement.style.display = 'none';
             });
 
             function showMessage(msg) {
